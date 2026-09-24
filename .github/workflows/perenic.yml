@@ -1,0 +1,44 @@
+name: PerenicAI quality gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - run: pytest
+
+  review:
+    # Only review pull requests (it looks at the files the PR changed).
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history, so we can compare with the base branch
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Review changed Python files
+        env:
+          # Optional. Add it under Settings > Secrets and variables > Actions
+          # to turn on Claude reviews. Without it, rule-based checks run.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # examples/ is excluded because its files are broken on purpose.
+          files=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.py' ':!examples/')
+          if [ -z "$files" ]; then
+            echo "No Python files changed." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python -m perenic review $files --markdown | tee -a "$GITHUB_STEP_SUMMARY"
+          exit ${PIPESTATUS[0]}
