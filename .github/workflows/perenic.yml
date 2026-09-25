@@ -36,6 +36,14 @@ jobs:
           # Optional. Set a repository variable named PERENIC_INDUSTRY to
           # "healthcare" or "finance" to add that industry's PAT agent.
           PERENIC_INDUSTRY: ${{ vars.PERENIC_INDUSTRY }}
+          # Optional compliance check (needs PERENIC_INDUSTRY and ANTHROPIC_API_KEY).
+          # Set ONE of these repository variables:
+          #   PERENIC_COMPLIANCE_DOCS    a folder in this repo, e.g. compliance_docs/healthcare
+          #   PERENIC_COMPLIANCE_MCP_URL a remote MCP server serving your documents
+          # and, if the MCP server needs one, a PERENIC_COMPLIANCE_MCP_TOKEN secret.
+          PERENIC_COMPLIANCE_DOCS: ${{ vars.PERENIC_COMPLIANCE_DOCS }}
+          PERENIC_COMPLIANCE_MCP_URL: ${{ vars.PERENIC_COMPLIANCE_MCP_URL }}
+          PERENIC_COMPLIANCE_MCP_TOKEN: ${{ secrets.PERENIC_COMPLIANCE_MCP_TOKEN }}
         run: |
           # examples/ and tests/ are excluded because they contain flawed code
           # and fake sensitive data on purpose, to exercise the PAT agents.
@@ -44,9 +52,14 @@ jobs:
             echo "No Python files changed." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          industry_option=""
+          options=()
           if [ -n "$PERENIC_INDUSTRY" ]; then
-            industry_option="--industry $PERENIC_INDUSTRY"
+            options+=(--industry "$PERENIC_INDUSTRY")
           fi
-          python -m perenic review $files $industry_option --markdown | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ -n "$PERENIC_COMPLIANCE_DOCS" ]; then
+            options+=(--compliance-docs "$PERENIC_COMPLIANCE_DOCS")
+          elif [ -n "$PERENIC_COMPLIANCE_MCP_URL" ]; then
+            options+=(--compliance-mcp "$PERENIC_COMPLIANCE_MCP_URL")
+          fi
+          python -m perenic review $files "${options[@]}" --markdown | tee -a "$GITHUB_STEP_SUMMARY"
           exit ${PIPESTATUS[0]}
