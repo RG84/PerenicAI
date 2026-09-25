@@ -1,5 +1,6 @@
 from perenic.agents.base import PATAgent
 from perenic.agents.code_reviewer import PATCodeReviewerAgent
+from perenic.agents.compliance import PATComplianceAgent
 from perenic.agents.finance import PATFinanceAgent
 from perenic.agents.healthcare import PATHealthcareAgent
 
@@ -9,4 +10,11 @@ INDUSTRY_AGENTS = {
     "finance": PATFinanceAgent,
 }
 
-__all__ = ["INDUSTRY_AGENTS", "PATAgent", "PATCodeReviewerAgent", "PATFinanceAgent", "PATHealthcareAgent"]
+__all__ = [
+    "INDUSTRY_AGENTS",
+    "PATAgent",
+    "PATCodeReviewerAgent",
+    "PATComplianceAgent",
+    "PATFinanceAgent",
+    "PATHealthcareAgent",
+]

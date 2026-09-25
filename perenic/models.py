@@ -21,6 +21,7 @@ class Finding:
     severity: str = WARNING  # INFO, WARNING or ERROR
     line: int | None = None  # line number in the file, if known
     source: str = "rules"  # "rules" (Python checks) or "claude" (AI review)
+    regulation: str | None = None  # the document rule it risks breaching, if any
 
 
 @dataclass
@@ -30,6 +31,7 @@ class AgentReport:
     agent_name: str
     findings: list[Finding] = field(default_factory=list)
     summary: str = ""
+    rules_checked: list[str] = field(default_factory=list)  # document sections consulted
 
     def count(self, severity: str) -> int:
         """How many findings have the given severity."""
