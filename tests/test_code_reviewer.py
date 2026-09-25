@@ -1,8 +1,8 @@
-from perenic.agents import CodeReviewerAgent
+from perenic.agents import PATCodeReviewerAgent
 
 
 def rules_found(code):
-    agent = CodeReviewerAgent(use_claude=False)
+    agent = PATCodeReviewerAgent(use_claude=False)
     return {f.rule for f in agent.rule_checks(code)}
 
 

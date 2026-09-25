@@ -3,6 +3,7 @@
 Examples:
     python -m perenic review my_file.py
     python -m perenic review a.py b.py --no-claude
+    python -m perenic review payments.py --industry finance
     cat snippet.py | python -m perenic review -
 """
 
@@ -10,7 +11,7 @@ import argparse
 import sys
 
 from perenic import llm
-from perenic.agents import CodeReviewerAgent
+from perenic.agents import INDUSTRY_AGENTS, PATCodeReviewerAgent
 from perenic.orchestrator import GateResult, Orchestrator
 
 ICONS = {"error": "❌", "warning": "⚠️", "info": "ℹ️"}
@@ -47,11 +48,16 @@ def format_markdown(result: GateResult) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="perenic", description="PerenicAI quality gate")
+    parser = argparse.ArgumentParser(prog="perenic", description="PerenicAI PAT quality gate")
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     review = subcommands.add_parser("review", help="Review one or more Python files")
     review.add_argument("files", nargs="+", help="Files to review, or - to read from stdin")
+    review.add_argument(
+        "--industry",
+        choices=sorted(INDUSTRY_AGENTS),
+        help="Add the PAT agent for this industry and tune the Claude review to it",
+    )
     review.add_argument("--no-claude", action="store_true", help="Only run the rule-based checks")
     review.add_argument("--markdown", action="store_true", help="Print a Markdown report (used by GitHub Actions)")
 
@@ -61,7 +67,15 @@ def main(argv: list[str] | None = None) -> int:
     if use_claude and not llm.claude_available():
         print("Note: ANTHROPIC_API_KEY not set, so only rule-based checks will run.", file=sys.stderr)
 
-    orchestrator = Orchestrator([CodeReviewerAgent(use_claude=use_claude)])
+    # The general PAT Code Reviewer always runs first. If an industry is
+    # chosen, its PAT agent runs after it and tunes the Claude review.
+    industry_agent = INDUSTRY_AGENTS[args.industry]() if args.industry else None
+    guidance = industry_agent.claude_guidance if industry_agent else ""
+
+    agents = [PATCodeReviewerAgent(use_claude=use_claude, industry_guidance=guidance)]
+    if industry_agent:
+        agents.append(industry_agent)
+    orchestrator = Orchestrator(agents)
 
     all_passed = True
     for path in args.files:

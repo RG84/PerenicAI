@@ -1,4 +1,4 @@
-"""The orchestrator runs the agents and lets them talk to each other.
+"""The orchestrator runs the PAT agents and lets them talk to each other.
 
 Agents don't call each other directly. Instead each agent posts messages
 to the orchestrator, and every agent that runs afterwards receives them
@@ -8,7 +8,7 @@ without changing the others.
 
 from dataclasses import dataclass, field
 
-from perenic.agents.base import BaseAgent
+from perenic.agents.base import PATAgent
 from perenic.models import ERROR, AgentReport, Message
 
 
@@ -22,14 +22,14 @@ class GateResult:
 
 
 class Orchestrator:
-    def __init__(self, agents: list[BaseAgent]):
+    def __init__(self, agents: list[PATAgent]):
         self.agents = agents
         self.messages: list[Message] = []
         for agent in agents:
             agent.orchestrator = self
 
     def publish(self, message: Message) -> None:
-        """Called by agents (through BaseAgent.post) to share a message."""
+        """Called by agents (through PATAgent.post) to share a message."""
         self.messages.append(message)
 
     def review(self, code: str, filename: str) -> GateResult:

@@ -1,16 +1,19 @@
-"""The base class that every Perenic agent builds on."""
+"""The base class that every PAT (Perennial Artificial Testing) agent builds on."""
 
 from perenic.models import AgentReport, Message
 
 
-class BaseAgent:
-    """A Perenic agent.
+class PATAgent:
+    """A PAT agent.
 
-    To make a new agent, create a class that inherits from BaseAgent,
-    give it a `name`, and write a `run` method.
+    To make a new agent, create a class that inherits from PATAgent,
+    give it a `name`, and write a `run` method. Industry agents also set
+    `industry` and `claude_guidance`.
     """
 
-    name = "base"
+    name = "pat-base"
+    industry = None  # e.g. "healthcare"; None means the agent suits any industry
+    claude_guidance = ""  # extra instructions for the Claude review
 
     def __init__(self):
         # The orchestrator fills this in so the agent can send messages.

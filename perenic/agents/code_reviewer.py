@@ -1,4 +1,4 @@
-"""The Code Reviewer agent.
+"""The PAT Code Reviewer agent: a general review that suits any industry.
 
 It always runs a set of simple rule-based checks written in plain Python.
 If an Anthropic API key is set, it also asks Claude for a deeper review.
@@ -7,19 +7,21 @@ If an Anthropic API key is set, it also asks Claude for a deeper review.
 import ast
 
 from perenic import llm
-from perenic.agents.base import BaseAgent
+from perenic.agents.base import PATAgent
 from perenic.models import ERROR, INFO, WARNING, AgentReport, Finding, Message
 
 MAX_FUNCTION_LINES = 50
 MAX_ARGUMENTS = 5
 
 
-class CodeReviewerAgent(BaseAgent):
-    name = "code-reviewer"
+class PATCodeReviewerAgent(PATAgent):
+    name = "pat-code-reviewer"
 
-    def __init__(self, use_claude: bool = True):
+    def __init__(self, use_claude: bool = True, industry_guidance: str = ""):
         super().__init__()
         self.use_claude = use_claude
+        # Set by the CLI when an industry is chosen, so Claude knows what to focus on.
+        self.industry_guidance = industry_guidance
 
     def run(self, code: str, filename: str, inbox: list[Message]) -> AgentReport:
         report = AgentReport(agent_name=self.name)
@@ -27,7 +29,7 @@ class CodeReviewerAgent(BaseAgent):
 
         if self.use_claude and llm.claude_available():
             try:
-                result = llm.review_with_claude(code, filename)
+                result = llm.review_with_claude(code, filename, self.industry_guidance)
                 report.summary = result["summary"]
                 for item in result["findings"]:
                     report.findings.append(
