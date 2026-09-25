@@ -1,4 +1,4 @@
-name: PerenicAI quality gate
+name: PerenicAI PAT quality gate
 
 on:
   pull_request:
@@ -33,12 +33,20 @@ jobs:
           # Optional. Add it under Settings > Secrets and variables > Actions
           # to turn on Claude reviews. Without it, rule-based checks run.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Optional. Set a repository variable named PERENIC_INDUSTRY to
+          # "healthcare" or "finance" to add that industry's PAT agent.
+          PERENIC_INDUSTRY: ${{ vars.PERENIC_INDUSTRY }}
         run: |
-          # examples/ is excluded because its files are broken on purpose.
-          files=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.py' ':!examples/')
+          # examples/ and tests/ are excluded because they contain flawed code
+          # and fake sensitive data on purpose, to exercise the PAT agents.
+          files=$(git diff --name-only --diff-filter=ACMR origin/${{ github.base_ref }}...HEAD -- '*.py' ':!examples/' ':!tests/')
           if [ -z "$files" ]; then
             echo "No Python files changed." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          python -m perenic review $files --markdown | tee -a "$GITHUB_STEP_SUMMARY"
+          industry_option=""
+          if [ -n "$PERENIC_INDUSTRY" ]; then
+            industry_option="--industry $PERENIC_INDUSTRY"
+          fi
+          python -m perenic review $files $industry_option --markdown | tee -a "$GITHUB_STEP_SUMMARY"
           exit ${PIPESTATUS[0]}
