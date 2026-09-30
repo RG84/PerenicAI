@@ -1,0 +1,7 @@
+# Look and feel of the PerenicAI website (app.py).
+[theme]
+primaryColor = "#0F766E"
+
+[browser]
+# Don't send usage statistics to Streamlit.
+gatherUsageStats = false

@@ -3,7 +3,7 @@
 PAT Compliance starts this automatically when you pass --compliance-docs, so
 you normally never run it yourself. To try it by hand:
 
-    python -m perenic.compliance_server compliance_docs/healthcare
+    python -m perenic.compliance_server compliance_docs/finance
 
 Supported files: .md, .txt and .pdf. Markdown files are split into sections
 at their headings (#, ##, ...), PDFs into pages, and text files into parts.
@@ -21,7 +21,7 @@ WORD = re.compile(r"[a-z0-9§.]+")
 
 @dataclass
 class Section:
-    document: str  # file name, e.g. "hipaa_security_rule.md"
+    document: str  # file name, e.g. "pci_dss_summary.md"
     title: str  # heading, page or part, e.g. "§164.312(b) Audit controls"
     text: str
 

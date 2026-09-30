@@ -33,12 +33,9 @@ jobs:
           # Optional. Add it under Settings > Secrets and variables > Actions
           # to turn on Claude reviews. Without it, rule-based checks run.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # Optional. Set a repository variable named PERENIC_INDUSTRY to
-          # "healthcare" or "finance" to add that industry's PAT agent.
-          PERENIC_INDUSTRY: ${{ vars.PERENIC_INDUSTRY }}
-          # Optional compliance check (needs PERENIC_INDUSTRY and ANTHROPIC_API_KEY).
+          # Optional compliance check (needs ANTHROPIC_API_KEY).
           # Set ONE of these repository variables:
-          #   PERENIC_COMPLIANCE_DOCS    a folder in this repo, e.g. compliance_docs/healthcare
+          #   PERENIC_COMPLIANCE_DOCS    a folder in this repo, e.g. compliance_docs/finance
           #   PERENIC_COMPLIANCE_MCP_URL a remote MCP server serving your documents
           # and, if the MCP server needs one, a PERENIC_COMPLIANCE_MCP_TOKEN secret.
           PERENIC_COMPLIANCE_DOCS: ${{ vars.PERENIC_COMPLIANCE_DOCS }}
@@ -53,9 +50,6 @@ jobs:
             exit 0
           fi
           options=()
-          if [ -n "$PERENIC_INDUSTRY" ]; then
-            options+=(--industry "$PERENIC_INDUSTRY")
-          fi
           if [ -n "$PERENIC_COMPLIANCE_DOCS" ]; then
             options+=(--compliance-docs "$PERENIC_COMPLIANCE_DOCS")
           elif [ -n "$PERENIC_COMPLIANCE_MCP_URL" ]; then

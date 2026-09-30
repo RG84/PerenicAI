@@ -1,5 +1,6 @@
 anthropic[mcp]>=1.8.0
 mcp>=2.2
 pypdf>=5.0
+streamlit>=1.40  # the website (app.py)
 pytest>=8.0
 httpx2>=2.0  # used by the tests to mock the Anthropic API
