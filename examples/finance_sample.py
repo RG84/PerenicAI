@@ -1,6 +1,6 @@
 """A deliberately flawed payments file to try PAT Finance on.
 
-Run:  python -m perenic review examples/finance_sample.py --industry finance
+Run:  python -m perenic review examples/finance_sample.py
 (The card number below is a public test number, not a real card.)
 """
 

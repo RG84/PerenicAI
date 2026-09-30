@@ -1,11 +1,13 @@
 """Command-line entry point.
 
+Every review runs PAT Code Reviewer and PAT Finance. PAT Compliance is added
+when you give it your compliance documents.
+
 Examples:
     python -m perenic review my_file.py
     python -m perenic review a.py b.py --no-claude
-    python -m perenic review payments.py --industry finance
-    python -m perenic review payments.py --industry finance --compliance-docs compliance_docs/finance
-    python -m perenic review payments.py --industry finance --compliance-mcp https://example.com/mcp
+    python -m perenic review payments.py --compliance-docs compliance_docs/finance
+    python -m perenic review payments.py --compliance-mcp https://example.com/mcp
     cat snippet.py | python -m perenic review -
 """
 
@@ -15,8 +17,8 @@ import sys
 
 from perenic import llm
 from perenic.compliance import ComplianceSource
-from perenic.agents import INDUSTRY_AGENTS, PATCodeReviewerAgent, PATComplianceAgent
 from perenic.orchestrator import GateResult, Orchestrator
+from perenic.scanner import build_agents
 
 ICONS = {"error": "❌", "warning": "⚠️", "info": "ℹ️"}
 
@@ -63,27 +65,15 @@ def format_markdown(result: GateResult) -> str:
     return "\n".join(lines)
 
 
-def build_agents(args, use_claude: bool) -> list:
-    """The PAT agents to run, in order.
-
-    The general PAT Code Reviewer always runs first. If an industry is chosen,
-    its PAT agent runs next and tunes the Claude review. PAT Compliance runs
-    last, so it can see what the other PAT agents found.
-    """
-    industry_agent = INDUSTRY_AGENTS[args.industry]() if args.industry else None
-    guidance = industry_agent.claude_guidance if industry_agent else ""
-
-    agents = [PATCodeReviewerAgent(use_claude=use_claude, industry_guidance=guidance)]
-    if industry_agent:
-        agents.append(industry_agent)
-    if args.compliance_docs or args.compliance_mcp:
-        source = ComplianceSource(
-            docs_folder=args.compliance_docs,
-            mcp_url=args.compliance_mcp,
-            mcp_token=os.environ.get("PERENIC_COMPLIANCE_MCP_TOKEN"),
-        )
-        agents.append(PATComplianceAgent(guidance, source))
-    return agents
+def compliance_source(args) -> ComplianceSource | None:
+    """Where the compliance documents come from, or None if none were given."""
+    if not (args.compliance_docs or args.compliance_mcp):
+        return None
+    return ComplianceSource(
+        docs_folder=args.compliance_docs,
+        mcp_url=args.compliance_mcp,
+        mcp_token=os.environ.get("PERENIC_COMPLIANCE_MCP_TOKEN"),
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -92,11 +82,6 @@ def main(argv: list[str] | None = None) -> int:
 
     review = subcommands.add_parser("review", help="Review one or more Python files")
     review.add_argument("files", nargs="+", help="Files to review, or - to read from stdin")
-    review.add_argument(
-        "--industry",
-        choices=sorted(INDUSTRY_AGENTS),
-        help="Add the PAT agent for this industry and tune the Claude review to it",
-    )
     sources = review.add_mutually_exclusive_group()
     sources.add_argument(
         "--compliance-docs",
@@ -114,8 +99,6 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     wants_compliance = bool(args.compliance_docs or args.compliance_mcp)
-    if wants_compliance and not args.industry:
-        review.error("--compliance-docs and --compliance-mcp need --industry")
     if wants_compliance and args.no_claude:
         review.error("compliance checks need Claude, so they can't be combined with --no-claude")
 
@@ -123,7 +106,7 @@ def main(argv: list[str] | None = None) -> int:
     if use_claude and not llm.claude_available():
         print("Note: ANTHROPIC_API_KEY not set, so only rule-based checks will run.", file=sys.stderr)
 
-    orchestrator = Orchestrator(build_agents(args, use_claude))
+    orchestrator = Orchestrator(build_agents(use_claude, compliance_source(args)))
 
     all_passed = True
     for path in args.files:

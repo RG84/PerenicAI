@@ -3,7 +3,7 @@
 PAT Compliance reads the documents in these folders when you run, for example:
 
 ```bash
-python -m perenic review app.py --industry healthcare --compliance-docs compliance_docs/healthcare
+python -m perenic review app.py --compliance-docs compliance_docs/finance
 ```
 
 **The files here are starting points only.** The regulation files are short plain-English summaries of selected sections. They are **not** the official text and are not legal advice. Replace them with, or add alongside them:

@@ -58,7 +58,7 @@ def claude_available() -> bool:
 def review_with_claude(code: str, filename: str, industry_guidance: str = "") -> dict:
     """Send code to Claude and return {"summary": ..., "findings": [...]}.
 
-    `industry_guidance` is appended to the system prompt, e.g. HIPAA focus areas.
+    `industry_guidance` is appended to the system prompt, e.g. PCI DSS focus areas.
 
     Raises an exception if the request fails; the caller decides what to do.
     """

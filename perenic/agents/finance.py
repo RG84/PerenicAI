@@ -19,7 +19,6 @@ CARD_NUMBER = re.compile(r"\b(?:\d[ -]?){12,18}\d\b")
 
 class PATFinanceAgent(PATAgent):
     name = "pat-finance"
-    industry = "finance"
 
     # Extra instructions added to the PAT Code Reviewer's Claude prompt.
     claude_guidance = (

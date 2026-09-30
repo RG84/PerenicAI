@@ -7,12 +7,10 @@ class PATAgent:
     """A PAT agent.
 
     To make a new agent, create a class that inherits from PATAgent,
-    give it a `name`, and write a `run` method. Industry agents also set
-    `industry` and `claude_guidance`.
+    give it a `name`, and write a `run` method.
     """
 
     name = "pat-base"
-    industry = None  # e.g. "healthcare"; None means the agent suits any industry
     claude_guidance = ""  # extra instructions for the Claude review
 
     def __init__(self):

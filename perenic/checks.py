@@ -1,8 +1,8 @@
-"""Reusable checks that industry PAT agents combine.
+"""Reusable checks used by PAT Finance.
 
 Each function takes a parsed syntax tree (from `ast.parse`) and returns a
-list of Findings. Keeping them here means PAT Healthcare and PAT Finance
-can share checks such as `hardcoded_secrets` without copying code.
+list of Findings. Keeping them in their own file keeps PAT Finance short
+and lets future PAT agents reuse checks such as `hardcoded_secrets`.
 """
 
 import ast
@@ -11,14 +11,13 @@ import re
 from perenic.models import ERROR, Finding
 
 SECRET_NAME = re.compile(r"password|passwd|pwd|secret|api_?key|token|private_?key|access_?key", re.IGNORECASE)
-SSN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 LOG_METHODS = {"debug", "info", "warning", "warn", "error", "critical", "exception", "log"}
 
 
 def names_in(node) -> set[str]:
     """Every variable name, attribute name and string key used inside `node`.
 
-    For `print(patient.ssn, record["dob"])` this returns {"print", "patient", "ssn", "record", "dob"}.
+    For `print(card.cvv, record["iban"])` this returns {"print", "card", "cvv", "record", "iban"}.
     """
     found = set()
     for child in ast.walk(node):
@@ -34,8 +33,8 @@ def names_in(node) -> set[str]:
 def name_has_term(name: str, term: str) -> bool:
     """True if `term` is a whole part of `name`.
 
-    "patient_dob" has "dob" and "unit_prices" has "price", but "company" does
-    not have "pan". Terms with underscores ("date_of_birth") may appear anywhere.
+    "card_cvv" has "cvv" and "unit_prices" has "price", but "company" does
+    not have "pan". Terms with underscores ("card_number") may appear anywhere.
     """
     if "_" in term:
         return term in name
